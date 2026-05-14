@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlowGuard Nexus | Advanced Simulation Environment</title>
+    <meta name="description" content="Industrial-grade fluid leakage simulation and predictive maintenance visualizer.">
+    <style>
+        :root {
+            --primary: #00f2fe;
+            --secondary: #4facfe;
+            --bg-dark: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --accent: #f43f5e;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            background: radial-gradient(circle at top right, #1e293b, #0f172a);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -1px;
+        }
+
+        .status-badge {
+            padding: 0.5rem 1rem;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border-radius: 99px;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0.5; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .visualizer-main {
+            height: 400px;
+            position: relative;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 1rem;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pipe-system {
+            width: 80%;
+            height: 20px;
+            background: #334155;
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .fluid {
+            position: absolute;
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            animation: flow 3s linear infinite;
+        }
+
+        @keyframes flow {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(100%); }
+        }
+
+        .leak-point {
+            position: absolute;
+            top: 50%;
+            left: 60%;
+            width: 10px;
+            height: 10px;
+            background: var(--accent);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            display: none;
+        }
+
+        .leak-active .leak-point {
+            display: block;
+            box-shadow: 0 0 20px var(--accent);
+            animation: drip 0.5s infinite alternate;
+        }
+
+        @keyframes drip {
+            from { transform: translate(-50%, -50%) scale(1); }
+            to { transform: translate(-50%, -50%) scale(1.5); }
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .control-group h3 {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            color: var(--text-muted);
+        }
+
+        .btn {
+            padding: 1rem;
+            border: none;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(79, 172, 254, 0.3);
+        }
+
+        .btn-danger {
+            background: rgba(244, 63, 94, 0.1);
+            border: 1px solid rgba(244, 63, 94, 0.2);
+            color: var(--accent);
+        }
+
+        .btn-danger:hover {
+            background: var(--accent);
+            color: white;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 1rem;
+            border-radius: 0.75rem;
+            text-align: center;
+        }
+
+        .stat-value {
+            display: block;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        #log {
+            margin-top: 1rem;
+            height: 120px;
+            overflow-y: auto;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.8rem;
+            color: #64748b;
+            padding: 0.5rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 0.5rem;
+        }
+
+        .log-entry {
+            margin-bottom: 0.25rem;
+            border-left: 2px solid var(--secondary);
+            padding-left: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">FLOWGUARD NEXUS</div>
+            <div class="status-badge">
+                <div class="status-dot"></div>
+                Simulation Live
+            </div>
+        </header>
+
+        <main class="grid">
+            <div class="card">
+                <div class="visualizer-main" id="visualizer">
+                    <div class="pipe-system">
+                        <div class="fluid"></div>
+                        <div class="leak-point"></div>
+                    </div>
+                </div>
+                <div class="stats">
+                    <div class="stat-item">
+                        <span class="stat-value" id="pressure">101.3</span>
+                        <span class="stat-label">Pressure (kPa)</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="flow-rate">5.4</span>
+                        <span class="stat-label">Flow Rate (L/s)</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="temp">24.2</span>
+                        <span class="stat-label">Temperature (°C)</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="health">100%</span>
+                        <span class="stat-label">System Health</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card controls">
+                <div class="control-group">
+                    <h3>Simulation Controls</h3>
+                    <button class="btn btn-primary" id="start-sim" style="width: 100%; margin-bottom: 1rem;">Start Flow</button>
+                    <button class="btn btn-danger" id="trigger-leak" style="width: 100%;">Trigger Anomaly</button>
+                </div>
+
+                <div class="control-group">
+                    <h3>System Logs</h3>
+                    <div id="log">
+                        <div class="log-entry">System initialized...</div>
+                        <div class="log-entry">Waiting for telemetry...</div>
+                    </div>
+                </div>
+
+                <button class="btn btn-danger" id="emergency-stop" style="width: 100%; margin-top: auto;">EMERGENCY SHUTDOWN</button>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const log = document.getElementById('log');
+        const visualizer = document.getElementById('visualizer');
+        const pressureEl = document.getElementById('pressure');
+        const healthEl = document.getElementById('health');
+        
+        function addLog(msg) {
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            log.prepend(entry);
+        }
+
+        document.getElementById('start-sim').addEventListener('click', () => {
+            addLog("Pump system activated. Establishing nominal flow...");
+            visualizer.classList.remove('leak-active');
+            healthEl.textContent = "100%";
+            healthEl.style.color = "#10b981";
+        });
+
+        document.getElementById('trigger-leak').addEventListener('click', () => {
+            visualizer.classList.add('leak-active');
+            addLog("CRITICAL: Anomaly detected at Node 06-B!");
+            pressureEl.textContent = "84.2";
+            healthEl.textContent = "62%";
+            healthEl.style.color = "#f43f5e";
+        });
+
+        document.getElementById('emergency-stop').addEventListener('click', () => {
+            visualizer.classList.remove('leak-active');
+            addLog("Emergency shutdown sequence initiated.");
+            pressureEl.textContent = "0.0";
+            healthEl.textContent = "SYSTEM OFFLINE";
+            healthEl.style.color = "#94a3b8";
+        });
+
+        // Simple telemetry fluctuation
+        setInterval(() => {
+            if (pressureEl.textContent !== "0.0" && !visualizer.classList.contains('leak-active')) {
+                const base = 101.3;
+                const dev = (Math.random() - 0.5) * 0.5;
+                pressureEl.textContent = (base + dev).toFixed(1);
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
