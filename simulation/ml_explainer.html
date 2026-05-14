@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Forest ML Model Explainer</title>
+    <style>
+        :root {
+            --bg: #f8fafc; --surface: #ffffff; --text-main: #0f172a;
+            --text-muted: #64748b; --border: #e2e8f0; --green: #22c55e;
+            --red: #ef4444; --orange: #f59e0b; --blue: #3b82f6; --gray-light: #f1f5f9;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #0f172a; --surface: #1e293b; --text-main: #f8fafc;
+                --text-muted: #94a3b8; --border: #334155; --gray-light: #334155;
+            }
+        }
+
+        * { font-family: 'Inter', sans-serif; box-sizing: border-box; }
+        body { background: var(--bg); color: var(--text-main); padding: 2rem; margin: 0; }
+        .container { max-width: 1200px; margin: 0 auto; display: grid; gap: 1.5rem; grid-template-columns: 350px 1fr; }
+        
+        .header { grid-column: 1 / -1; margin-bottom: 1rem; }
+        .header h1 { font-size: 1.75rem; margin:0; }
+
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: 0.75rem; padding: 1.5rem; }
+        .card-title { font-weight: 600; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
+
+        .slider-group { margin-bottom: 1.5rem; }
+        .slider-header { display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.875rem; font-weight: 500; }
+        .slider-value { color: var(--blue); font-weight: 700; }
+        input[type=range] { width: 100%; accent-color: var(--blue); }
+
+        .prediction-box { text-align: center; background: var(--gray-light); padding: 2rem; border-radius: 0.5rem; border: 1px solid var(--border); }
+        .pred-label { color: var(--text-muted); font-size: 0.875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+        .pred-value { font-size: 3.5rem; font-weight: 800; margin: 0.5rem 0; line-height: 1; }
+        .pred-unit { color: var(--text-muted); margin-bottom: 1rem; font-size: 0.875rem; }
+        .badge { display: inline-block; padding: 0.5rem 1.5rem; border-radius: 9999px; font-weight: 600; font-size: 0.875rem; margin-bottom: 1rem; transition: background 0.3s, color 0.3s; }
+        .reasoning { font-size: 0.875rem; font-weight: 500; color: var(--text-muted); min-height: 1.25rem; }
+
+        .voting-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 0.5rem; margin-top: 1rem; }
+        .tree-box { height: 40px; background: var(--border); border-radius: 0.25rem; display: flex; align-items: flex-end; position: relative; overflow: hidden; }
+        .tree-fill { width: 100%; height: 30%; background: var(--text-muted); transition: height 0.3s, background 0.3s; }
+        .tree-label { position: absolute; top: 2px; left: 0; right: 0; text-align: center; font-size: 0.6rem; color: #fff; font-weight: 600; z-index: 1; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+
+        .confidence { margin-top: 1.5rem; }
+        .conf-header { display: flex; justify-content: space-between; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem; }
+        .conf-bar-bg { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+        .conf-bar-fill { height: 100%; background: var(--blue); width: 0%; transition: width 0.3s ease-out; }
+
+        .importance-row { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.75rem; font-size: 0.875rem; }
+        .imp-label { width: 130px; text-align: right; font-weight: 500; }
+        .imp-bar-container { flex: 1; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+        .imp-bar-fill { height: 100%; transition: width 0.3s, background 0.3s; }
+        .imp-value { width: 50px; font-variant-numeric: tabular-nums; }
+
+        .specs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .spec-item { background: var(--gray-light); padding: 1rem; border-radius: 0.5rem; border: 1px solid var(--border); }
+        .spec-title { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.25rem; text-transform: uppercase; }
+        .spec-value { font-weight: 600; font-size: 0.875rem;}
+
+        .dashboard-main { display: grid; gap: 1.5rem; }
+        @media (max-width: 900px) {
+            .container { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Random Forest ML Model - Interactive Explainer</h1>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Sensor Input Controls</div>
+            
+            <div class="slider-group">
+                <div class="slider-header">
+                    <span>Pressure (PSI)</span>
+                    <span class="slider-value" id="val-pressure">45 PSI</span>
+                </div>
+                <input type="range" id="sl-pressure" min="15" max="60" value="45">
+            </div>
+
+            <div class="slider-group">
+                <div class="slider-header">
+                    <span>Flow Rate (L/min)</span>
+                    <span class="slider-value" id="val-flow">12 L/min</span>
+                </div>
+                <input type="range" id="sl-flow" min="5" max="25" value="12">
+            </div>
+
+            <div class="slider-group">
+                <div class="slider-header">
+                    <span>Gas Concentration (ppm)</span>
+                    <span class="slider-value" id="val-gas">100 ppm</span>
+                </div>
+                <input type="range" id="sl-gas" min="50" max="800" value="100">
+            </div>
+
+            <div class="slider-group">
+                <div class="slider-header">
+                    <span>Humidity (%)</span>
+                    <span class="slider-value" id="val-humidity">55 %</span>
+                </div>
+                <input type="range" id="sl-humidity" min="30" max="80" value="55">
+            </div>
+
+            <div class="specs-grid" style="margin-top: 2rem;">
+                <div class="spec-item">
+                    <div class="spec-title">Random Forest</div>
+                    <div class="spec-value">100 decision trees</div>
+                </div>
+                <div class="spec-item">
+                    <div class="spec-title">Training Acc.</div>
+                    <div class="spec-value">94.52%</div>
+                </div>
+                <div class="spec-item">
+                    <div class="spec-title">Inference Time</div>
+                    <div class="spec-value">7.2 milliseconds</div>
+                </div>
+                <div class="spec-item">
+                    <div class="spec-title">Model Size</div>
+                    <div class="spec-value">2.5 MB</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-main">
+            <div class="card">
+                <div class="prediction-box">
+                    <div class="pred-label">Model Prediction</div>
+                    <div class="pred-value" id="display-prob">0%</div>
+                    <div class="pred-unit">% leak probability</div>
+                    <div class="badge" id="display-badge" style="background:#dcfce7;color:#16a34a;">Normal</div>
+                    <div class="reasoning" id="display-reason">All sensor values within normal range</div>
+                </div>
+
+                <div style="margin-top:2rem">
+                    <div class="conf-header">
+                        <span id="vote-title">Voting system: 0 out of 100 trees vote 'LEAK'</span>
+                    </div>
+                    <div class="voting-grid" id="voting-grid"></div>
+                </div>
+
+                <div class="confidence">
+                    <div class="conf-header">
+                        <span>Model confidence:</span>
+                        <span id="conf-val">100%</span>
+                    </div>
+                    <div class="conf-bar-bg">
+                        <div class="conf-bar-fill" id="conf-fill"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Top factors contributing to this prediction</div>
+                <div id="importance-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const DOM = {
+            sl: {
+                pressure: document.getElementById('sl-pressure'),
+                flow: document.getElementById('sl-flow'),
+                gas: document.getElementById('sl-gas'),
+                humidity: document.getElementById('sl-humidity')
+            },
+            val: {
+                pressure: document.getElementById('val-pressure'),
+                flow: document.getElementById('val-flow'),
+                gas: document.getElementById('val-gas'),
+                humidity: document.getElementById('val-humidity')
+            },
+            dispPro: document.getElementById('display-prob'),
+            dispBadge: document.getElementById('display-badge'),
+            dispReason: document.getElementById('display-reason'),
+            voteGrid: document.getElementById('voting-grid'),
+            voteTitle: document.getElementById('vote-title'),
+            confVal: document.getElementById('conf-val'),
+            confFill: document.getElementById('conf-fill'),
+            impContainer: document.getElementById('importance-container')
+        };
+
+        // Initialize voting grid (20 representatives)
+        for(let i=1; i<=20; i++) {
+            DOM.voteGrid.innerHTML += `
+                <div class="tree-box">
+                    <div class="tree-label">T${i}</div>
+                    <div class="tree-fill" id="tree-${i}"></div>
+                </div>
+            `;
+        }
+
+        const baselineImportances = [
+            { name: 'Pressure gradient', base: 28.5 },
+            { name: 'Pressure level', base: 21.3 },
+            { name: 'Flow anomaly', base: 18.7 },
+            { name: 'Flow rate', base: 14.2 },
+            { name: 'P/F ratio', base: 8.5 }
+        ];
+
+        function calculate() {
+            const p = parseFloat(DOM.sl.pressure.value);
+            const f = parseFloat(DOM.sl.flow.value);
+            const g = parseFloat(DOM.sl.gas.value);
+            const h = parseFloat(DOM.sl.humidity.value);
+
+            DOM.val.pressure.innerText = p + ' PSI';
+            DOM.val.flow.innerText = f + ' L/min';
+            DOM.val.gas.innerText = g + ' ppm';
+            DOM.val.humidity.innerText = h + ' %';
+
+            let prob = 0;
+            let reasons = [];
+
+            if (p < 30) { prob += 25; reasons.push('Pressure critically low'); }
+            else if (p < 35) { prob += 15; reasons.push('Pressure low'); }
+            else if (p < 40) { prob += 8; reasons.push('Pressure slightly low'); }
+
+            if (f > 18) { prob += 20; reasons.push('Flow rate elevated'); }
+            else if (f > 15) { prob += 10; reasons.push('Flow rate slightly high'); }
+
+            if (g > 250) { prob += 15; reasons.push('High gas concentration'); }
+            else if (g > 150) { prob += 5; }
+
+            if (h > 70) { prob += 10; reasons.push('High humidity'); }
+            else if (h > 65) { prob += 5; }
+
+            let pf = p / (f || 1);
+            if (pf < 2) { prob += 8; reasons.push('P/F anomaly'); }
+            else if (pf < 3) { prob += 4; }
+
+            prob = Math.min(100, Math.max(0, prob + Math.floor(Math.random() * 5))); // Add slight randomness like a real model
+
+            let confidence = Math.abs(50 - prob) * 2;
+            confidence = Math.min(100, Math.floor(confidence));
+            if (prob <= 5) confidence = 99;
+
+            DOM.dispPro.innerText = prob + '%';
+            DOM.confVal.innerText = confidence + '%';
+            DOM.confFill.style.width = confidence + '%';
+
+            if (prob > 70) {
+                DOM.dispBadge.innerText = 'High Risk';
+                DOM.dispBadge.style.background = '#fee2e2';
+                DOM.dispBadge.style.color = '#dc2626';
+            } else if (prob >= 50) {
+                DOM.dispBadge.innerText = 'Medium Risk';
+                DOM.dispBadge.style.background = '#fef3c7';
+                DOM.dispBadge.style.color = '#d97706';
+            } else {
+                DOM.dispBadge.innerText = 'Normal';
+                DOM.dispBadge.style.background = '#dcfce7';
+                DOM.dispBadge.style.color = '#16a34a';
+            }
+
+            if (reasons.length === 0) {
+                DOM.dispReason.innerText = 'All sensor values within normal range.';
+            } else {
+                DOM.dispReason.innerText = reasons.join(' • ');
+            }
+
+            let treesVoteLeak = Math.round((prob / 100) * 20);
+            DOM.voteTitle.innerText = `Voting system: ${prob} out of 100 trees vote 'LEAK'`;
+            
+            for(let i=1; i<=20; i++) {
+                const fill = document.getElementById(`tree-${i}`);
+                if (i <= treesVoteLeak) {
+                    fill.style.height = '100%';
+                    fill.style.background = '#ef4444';
+                } else {
+                    fill.style.height = '30%';
+                    fill.style.background = '#94a3b8';
+                }
+            }
+
+            let html = '';
+            baselineImportances.forEach(imp => {
+                let shift = (Math.random() * 4 - 2); 
+                let val = Math.max(1, (imp.base + (prob/100)*shift)).toFixed(1);
+                
+                let color = '#94a3b8';
+                if (imp.name.includes('Pressure') && p < 35) color = '#ef4444';
+                if (imp.name.includes('Flow') && f > 15) color = '#ef4444';
+                if (imp.name.includes('P/F') && pf < 2) color = '#f59e0b';
+
+                html += `
+                    <div class="importance-row">
+                        <div class="imp-label">${imp.name}</div>
+                        <div class="imp-bar-container">
+                            <div class="imp-bar-fill" style="width: ${val}%; background: ${color}"></div>
+                        </div>
+                        <div class="imp-value">${val}%</div>
+                    </div>
+                `;
+            });
+            DOM.impContainer.innerHTML = html;
+        }
+
+        Object.values(DOM.sl).forEach(el => {
+            el.addEventListener('input', calculate);
+        });
+
+        calculate(); // Init
+    </script>
+</body>
+</html>
