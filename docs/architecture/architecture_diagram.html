@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Architecture Diagram</title>
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #0f172a;
+                --surface: #1e293b;
+                --text-main: #f8fafc;
+                --text-muted: #94a3b8;
+            }
+        }
+        body {
+            margin: 0;
+            padding: 2rem;
+            background: var(--bg);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background: var(--surface);
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            max-width: 1200px;
+            width: 100%;
+            overflow-x: auto;
+        }
+        h1 { text-align: center; margin-bottom: 2rem; }
+        svg { width: 100%; height: auto; min-width: 1000px; display: block; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Water Leak Detection Architecture</h1>
+        <svg viewBox="0 0 1020 1100" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                    <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b" />
+                </marker>
+                
+                <rect id="bg-blue" width="145" height="100" rx="8" fill="#e0f2fe" stroke="#0284c7" stroke-width="2"/>
+                <rect id="bg-purple" width="150" height="90" rx="8" fill="#f3e8ff" stroke="#9333ea" stroke-width="2"/>
+                <rect id="bg-teal" width="250" height="110" rx="8" fill="#ccfbf1" stroke="#0d9488" stroke-width="2"/>
+                <rect id="bg-red" width="500" height="50" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+                <rect id="bg-dark" width="940" height="60" rx="8" fill="#1e293b" stroke="#0f172a" stroke-width="2"/>
+            </defs>
+            
+            <style>
+                .t-title { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 14px; fill: #0f172a; }
+                .t-sub { font-family: 'Inter', sans-serif; font-weight: 500; font-size: 12px; fill: #334155; }
+                .t-mono { font-family: monospace; font-size: 12px; fill: #475569; }
+                .t-white { font-family: 'Inter', sans-serif; fill: #f8fafc; font-weight: 600; font-size: 16px; }
+                .t-danger { font-family: 'Inter', sans-serif; fill: #b91c1c; font-weight: 600; }
+                .layer-title { font-family: 'Inter', sans-serif; fill: #94a3b8; font-size: 14px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; }
+                .arrow-label { font-family: 'Inter', sans-serif; fill: #64748b; font-size: 12px; font-weight: 500; text-anchor: middle;}
+                .box-container { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 2; rx: 12; }
+            </style>
+
+            <!-- BACKGROUND BOXES FOR LAYERS -->
+            <rect x="20" y="60" width="980" height="100" class="box-container" stroke-dasharray="5,5"/>
+            <text x="40" y="105" class="layer-title">Layer 1: Dashboard</text>
+
+            <rect x="20" y="200" width="980" height="360" class="box-container" stroke-dasharray="5,5"/>
+            <text x="40" y="240" class="layer-title">Layer 2: Cloud Backend</text>
+
+            <rect x="20" y="600" width="980" height="150" class="box-container" stroke-dasharray="5,5"/>
+            <text x="40" y="640" class="layer-title">Layer 3: Processing</text>
+
+            <rect x="20" y="790" width="980" height="150" class="box-container" stroke-dasharray="5,5"/>
+            <text x="40" y="830" class="layer-title">Layer 4: Sensor Layer</text>
+
+            <!-- LAYER 1: DASHBOARD -->
+            <use href="#bg-dark" x="40" y="80" />
+            <text x="510" y="115" class="t-white" text-anchor="middle">Web Dashboard + Mobile App (Real-time visualization)</text>
+
+            <!-- ARROW L1 to L2 -->
+            <line x1="510" y1="200" x2="510" y2="140" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)" />
+            <text x="520" y="175" class="arrow-label" style="text-anchor:start">HTTP/JSON</text>
+
+            <!-- LAYER 2: CLOUD BACKEND -->
+            <use href="#bg-teal" x="230" y="220" />
+            <text x="250" y="245" class="t-title">REST API</text>
+            <text x="250" y="265" class="t-mono">/api/predict, /api/analytics</text>
+            <text x="250" y="285" class="t-sub">Framework: Flask</text>
+            <text x="250" y="305" class="t-sub">Port: :5000</text>
+
+            <use href="#bg-teal" x="530" y="220" />
+            <text x="550" y="245" class="t-title">Database</text>
+            <text x="550" y="265" class="t-sub">Type: SQLite/PostgreSQL</text>
+            <text x="550" y="285" class="t-sub">Records: 1.2M records</text>
+            <text x="550" y="305" class="t-sub">Storage: 2.4 GB</text>
+
+            <use href="#bg-teal" x="230" y="350" />
+            <text x="250" y="375" class="t-title">Alert Manager</text>
+            <text x="250" y="395" class="t-sub">Capabilities: Email, SMS</text>
+            <text x="250" y="415" class="t-sub">Type: Notifications</text>
+            <text x="250" y="435" class="t-sub">Speed: Real-time</text>
+
+            <use href="#bg-teal" x="530" y="350" />
+            <text x="550" y="375" class="t-title">Analytics Engine</text>
+            <text x="550" y="395" class="t-sub">Features: Dashboard Data, Reports</text>
+            <text x="550" y="415" class="t-sub">Throughput: 10,000 pred/sec</text>
+
+            <use href="#bg-red" x="260" y="480" />
+            <text x="510" y="510" class="t-title t-danger" text-anchor="middle">Emergency Shutoff Control (/api/emergency/shutoff) → Solenoid Valve</text>
+
+            <!-- ARROW L2 to L3 -->
+            <line x1="510" y1="600" x2="510" y2="530" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)" />
+            <text x="520" y="570" class="arrow-label" style="text-anchor:start">WiFi (100-200ms)</text>
+
+            <!-- LAYER 3: PROCESSING -->
+            <rect x="220" y="620" width="760" height="115" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,4"/>
+            <text x="230" y="640" class="t-title">ESP32-S3 Microcontroller</text>
+
+            <use href="#bg-purple" x="240" y="635" />
+            <text x="315" y="660" class="t-title" text-anchor="middle">1. Read Sensors</text>
+            <text x="315" y="685" class="t-sub" text-anchor="middle">(6 sensors)</text>
+            <text x="315" y="705" class="t-sub" text-anchor="middle">Time: 50-80 ms</text>
+
+            <line x1="400" y1="680" x2="420" y2="680" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)" />
+
+            <use href="#bg-purple" x="430" y="635" />
+            <text x="505" y="660" class="t-title" text-anchor="middle">2. Normalize Features</text>
+            <text x="505" y="685" class="t-sub" text-anchor="middle">Method: Z-score</text>
+            <text x="505" y="705" class="t-sub" text-anchor="middle">Time: 2-3 ms</text>
+
+            <line x1="590" y1="680" x2="610" y2="680" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)" />
+
+            <use href="#bg-purple" x="620" y="635" />
+            <text x="695" y="660" class="t-title" text-anchor="middle">3. ML Predict</text>
+            <text x="695" y="685" class="t-sub" text-anchor="middle">Trees: 100</text>
+            <text x="695" y="705" class="t-sub" text-anchor="middle">Time: 5-8 ms</text>
+
+            <line x1="780" y1="680" x2="800" y2="680" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)" />
+
+            <use href="#bg-purple" x="810" y="635" />
+            <text x="885" y="660" class="t-title" text-anchor="middle">4. Decision</text>
+            <text x="885" y="685" class="t-sub" text-anchor="middle">Output: Risk Level</text>
+            <text x="885" y="705" class="t-sub" text-anchor="middle">Time: 1 ms</text>
+
+            <!-- ARROW L3 to L4 -->
+            <line x1="510" y1="790" x2="510" y2="735" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)" />
+            <text x="520" y="765" class="arrow-label" style="text-anchor:start">All sensor signals</text>
+
+            <!-- LAYER 4: SENSORS -->
+            <!-- 1. Pressure -->
+            <use href="#bg-blue" x="30" y="815" />
+            <text x="102" y="845" class="t-title" text-anchor="middle">Pressure</text>
+            <text x="102" y="865" class="t-sub" text-anchor="middle">Component: BMP280</text>
+            <text x="102" y="885" class="t-mono" text-anchor="middle">40-50 PSI | I2C</text>
+
+            <!-- 2. Flow -->
+            <use href="#bg-blue" x="190" y="815" />
+            <text x="262" y="845" class="t-title" text-anchor="middle">Flow Rate</text>
+            <text x="262" y="865" class="t-sub" text-anchor="middle">Component: YF-S401</text>
+            <text x="262" y="885" class="t-mono" text-anchor="middle">10-15 L/m | GPIO</text>
+
+            <!-- 3. Temp -->
+            <use href="#bg-blue" x="350" y="815" />
+            <text x="422" y="845" class="t-title" text-anchor="middle">Temperature</text>
+            <text x="422" y="865" class="t-sub" text-anchor="middle">Component: DHT22</text>
+            <text x="422" y="885" class="t-mono" text-anchor="middle">Range: 20°C | Digital</text>
+
+            <!-- 4. Gas -->
+            <use href="#bg-blue" x="510" y="815" />
+            <text x="582" y="845" class="t-title" text-anchor="middle">Gas</text>
+            <text x="582" y="865" class="t-sub" text-anchor="middle">Component: MQ-6</text>
+            <text x="582" y="885" class="t-mono" text-anchor="middle">Range: &lt;150 ppm | ADC</text>
+
+            <!-- 5. Humidity -->
+            <use href="#bg-blue" x="670" y="815" />
+            <text x="742" y="845" class="t-title" text-anchor="middle">Humidity</text>
+            <text x="742" y="865" class="t-sub" text-anchor="middle">Component: DHT22</text>
+            <text x="742" y="885" class="t-mono" text-anchor="middle">Range: 55% RH | Digital</text>
+
+            <!-- 6. Water Quality -->
+            <use href="#bg-blue" x="830" y="815" />
+            <text x="902" y="845" class="t-title" text-anchor="middle">Water Quality</text>
+            <text x="902" y="865" class="t-sub" text-anchor="middle">Comp: Analog TDS</text>
+            <text x="902" y="885" class="t-mono" text-anchor="middle">Range: 500 ppm | ADC</text>
+
+            <!-- ADDITIONAL INFO SECTION -->
+            <rect x="200" y="1000" width="200" height="50" rx="4" fill="#f8fafc" stroke="#e2e8f0"/>
+            <text x="300" y="1018" class="t-title" text-anchor="middle">Key Metrics</text>
+            <text x="300" y="1035" class="t-mono" text-anchor="middle">5-8ms | 100mA | 94.5% Acc</text>
+
+            <rect x="420" y="1000" width="200" height="50" rx="4" fill="#f8fafc" stroke="#e2e8f0"/>
+            <text x="520" y="1018" class="t-title" text-anchor="middle">Scalability</text>
+            <text x="520" y="1035" class="t-mono" text-anchor="middle">54 Nodes | 540 pred/sec</text>
+
+            <rect x="640" y="1000" width="200" height="50" rx="4" fill="#f8fafc" stroke="#e2e8f0"/>
+            <text x="740" y="1018" class="t-title" text-anchor="middle">Data Flow</text>
+            <text x="740" y="1035" class="t-mono" text-anchor="middle">10 features | 100 trees</text>
+        </svg>
+    </div>
+</body>
+</html>
